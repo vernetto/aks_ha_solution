@@ -66,4 +66,3 @@ This solution is provided as-is with no warranties or guarantees.
 ## Contact
 
 For questions or support, please contact your Azure representative.
-# aks_ha_solution

@@ -1,0 +1,212 @@
+digraph {
+    rankdir=TB;
+    node [shape=box, style="filled,rounded", color=lightblue, fontname="Arial", margin=0.3];
+    edge [fontname="Arial", fontsize=10];
+    
+    // Global components
+    subgraph cluster_global {
+        label="Global Services";
+        style=filled;
+        color=lightgrey;
+        
+        frontdoor [label="Azure Front Door\nGlobal Load Balancer", shape=box, style="filled", color="#ADD8E6"];
+        aad [label="Azure Active Directory", shape=box, style="filled", color="#ADD8E6"];
+    }
+    
+    // Region 1
+    subgraph cluster_region1 {
+        label="Region 1 (East US)";
+        style=filled;
+        color=lightgrey;
+        
+        // Hub VNet
+        subgraph cluster_hub1 {
+            label="Hub VNet";
+            style=filled;
+            color=white;
+            
+            hub_vnet1 [label="Hub Virtual Network"];
+            firewall1 [label="Azure Firewall"];
+        }
+        
+        // Spoke VNet
+        subgraph cluster_spoke1 {
+            label="Spoke VNet";
+            style=filled;
+            color=white;
+            
+            spoke_vnet1 [label="Spoke Virtual Network"];
+            appgw1 [label="Application Gateway\nwith WAF"];
+        }
+        
+        // AKS Cluster
+        subgraph cluster_aks1 {
+            label="AKS Cluster";
+            style=filled;
+            color=white;
+            
+            aks1 [label="AKS Control Plane"];
+            
+            // System Node Pool
+            subgraph cluster_system1 {
+                label="System Node Pool";
+                style=filled;
+                color="#E6F5FF";
+                
+                system_nodes1 [label="System Nodes\n(3 nodes across AZs)"];
+            }
+            
+            // Web App Node Pool
+            subgraph cluster_webapp1 {
+                label="Web App Node Pool";
+                style=filled;
+                color="#E6F5FF";
+                
+                webapp_nodes1 [label="Web App Nodes\n(6 nodes across AZs)"];
+                web_pods1 [label="Web Application Pods"];
+                ingress1 [label="Ingress Controller"];
+            }
+            
+            // Database Node Pool
+            subgraph cluster_db1 {
+                label="Database Node Pool";
+                style=filled;
+                color="#E6F5FF";
+                
+                db_nodes1 [label="Database Nodes\n(3 nodes across AZs)"];
+                db_pods1 [label="Database Pods\n(StatefulSet)"];
+                pv1 [label="Persistent Volumes"];
+            }
+        }
+        
+        // Azure Services
+        subgraph cluster_services1 {
+            label="Azure Services";
+            style=filled;
+            color=white;
+            
+            sql1 [label="Azure SQL Database"];
+            cosmos1 [label="Azure Cosmos DB"];
+            storage1 [label="Azure Storage"];
+            keyvault1 [label="Azure Key Vault"];
+            monitor1 [label="Azure Monitor\nLog Analytics"];
+        }
+    }
+    
+    // Region 2
+    subgraph cluster_region2 {
+        label="Region 2 (West US)";
+        style=filled;
+        color=lightgrey;
+        
+        // Hub VNet
+        subgraph cluster_hub2 {
+            label="Hub VNet";
+            style=filled;
+            color=white;
+            
+            hub_vnet2 [label="Hub Virtual Network"];
+            firewall2 [label="Azure Firewall"];
+        }
+        
+        // Spoke VNet
+        subgraph cluster_spoke2 {
+            label="Spoke VNet";
+            style=filled;
+            color=white;
+            
+            spoke_vnet2 [label="Spoke Virtual Network"];
+            appgw2 [label="Application Gateway\nwith WAF"];
+        }
+        
+        // AKS Cluster
+        subgraph cluster_aks2 {
+            label="AKS Cluster";
+            style=filled;
+            color=white;
+            
+            aks2 [label="AKS Control Plane"];
+            
+            // System Node Pool
+            subgraph cluster_system2 {
+                label="System Node Pool";
+                style=filled;
+                color="#E6F5FF";
+                
+                system_nodes2 [label="System Nodes\n(3 nodes across AZs)"];
+            }
+            
+            // Web App Node Pool
+            subgraph cluster_webapp2 {
+                label="Web App Node Pool";
+                style=filled;
+                color="#E6F5FF";
+                
+                webapp_nodes2 [label="Web App Nodes\n(6 nodes across AZs)"];
+                web_pods2 [label="Web Application Pods"];
+                ingress2 [label="Ingress Controller"];
+            }
+            
+            // Database Node Pool
+            subgraph cluster_db2 {
+                label="Database Node Pool";
+                style=filled;
+                color="#E6F5FF";
+                
+                db_nodes2 [label="Database Nodes\n(3 nodes across AZs)"];
+                db_pods2 [label="Database Pods\n(StatefulSet)"];
+                pv2 [label="Persistent Volumes"];
+            }
+        }
+        
+        // Azure Services
+        subgraph cluster_services2 {
+            label="Azure Services";
+            style=filled;
+            color=white;
+            
+            sql2 [label="Azure SQL Database"];
+            cosmos2 [label="Azure Cosmos DB"];
+            storage2 [label="Azure Storage"];
+            keyvault2 [label="Azure Key Vault"];
+            monitor2 [label="Azure Monitor\nLog Analytics"];
+        }
+    }
+    
+    // Connections
+    frontdoor -> appgw1 [label="Route Traffic"];
+    frontdoor -> appgw2 [label="Route Traffic"];
+    
+    appgw1 -> ingress1;
+    appgw2 -> ingress2;
+    
+    ingress1 -> web_pods1;
+    ingress2 -> web_pods2;
+    
+    web_pods1 -> db_pods1;
+    web_pods2 -> db_pods2;
+    
+    db_pods1 -> pv1;
+    db_pods2 -> pv2;
+    
+    db_pods1 -> sql1;
+    db_pods2 -> sql2;
+    
+    sql1 -> sql2 [dir=both, label="Geo-Replication"];
+    cosmos1 -> cosmos2 [dir=both, label="Multi-Region Write"];
+    
+    aad -> aks1;
+    aad -> aks2;
+    
+    hub_vnet1 -> spoke_vnet1 [dir=both, label="Peering"];
+    hub_vnet2 -> spoke_vnet2 [dir=both, label="Peering"];
+    
+    firewall1 -> spoke_vnet1;
+    firewall2 -> spoke_vnet2;
+    
+    aks1 -> monitor1;
+    aks2 -> monitor2;
+    
+    web_pods1 -> keyvault1;
+    web_pods2 -> keyvault2;
+}

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config
+  namespace: webapp
+data:
+  db_host: "database-service.database.svc.cluster.local"
+  db_name: "webappdb"
+  app_settings: |
+    {
+      "LogLevel": "Information",
+      "EnableCache": "true",
+      "CacheTimeout": "300",
+      "MaxConnections": "100"
+    }
